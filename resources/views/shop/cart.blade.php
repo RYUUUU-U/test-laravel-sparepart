@@ -93,8 +93,13 @@
                     @foreach($cart as $id => $item)
                     <div class="cart-item">
                         {{-- Thumbnail --}}
-                        <img src="https://placehold.co/160x140/e2e8f0/64748b?text={{ urlencode($item['code']) }}"
-                             alt="{{ $item['name'] }}" class="cart-item-img">
+                        @php
+                            $cartImgSrc = !empty($item['image_url']) ? asset('storage/' . $item['image_url']) : null;
+                            $cartFallback = 'https://placehold.co/160x140/e2e8f0/64748b?text=' . urlencode($item['code']);
+                        @endphp
+                        <img src="{{ $cartImgSrc ?? $cartFallback }}"
+                             alt="{{ $item['name'] }}" class="cart-item-img"
+                             onerror="this.src='{{ $cartFallback }}'">
 
                         {{-- Info --}}
                         <div class="flex-grow-1 min-width-0">

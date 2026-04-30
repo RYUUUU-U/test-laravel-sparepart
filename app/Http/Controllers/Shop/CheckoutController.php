@@ -222,15 +222,22 @@ class CheckoutController extends Controller
      */
     public function success(string $token, XenditService $xenditService)
     {
-        try {
-            $orderNumber = decrypt($token);
-        } catch (\Exception $e) {
-            abort(404, 'Tautan tidak valid.');
+        // Decode base64url token → order number
+        // Supports both base64url-encoded and raw order numbers (Xendit sometimes sends raw)
+        $orderNumber = base64_decode(strtr($token, '-_', '+/'));
+
+        // Jika hasil decode bukan format order number valid, coba gunakan token langsung
+        if (!$orderNumber || !str_starts_with($orderNumber, 'ORD-')) {
+            $orderNumber = $token;
         }
 
         $order = Order::with('items')
             ->where('order_number', $orderNumber)
-            ->firstOrFail();
+            ->first();
+
+        if (!$order) {
+            abort(404, 'Pesanan tidak ditemukan.');
+        }
 
         $order->checkExpiration();
 
@@ -329,7 +336,7 @@ class CheckoutController extends Controller
             }
 
             // Update order status
-            $trackingNumber = 'RESI-' . now()->format('Ymd') . '-' . strtoupper(\Illuminate\Support\Str::random(4));
+            $trackingNumber = 'RESI-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4));
 
             $order->update([
                 'status'                 => Order::STATUS_PESANAN_DISIAPKAN,

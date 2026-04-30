@@ -197,11 +197,17 @@
 
         <div class="row g-4">
             @forelse($featured as $barang)
+            @php
+                $imgData = is_array($barang->image_url) ? $barang->image_url : (is_string($barang->image_url) ? json_decode($barang->image_url, true) : null);
+                $thumbSrc = !empty($imgData['thumbnail']) ? asset('storage/' . $imgData['thumbnail']) : null;
+                $fallbackSrc = 'https://placehold.co/400x300/e2e8f0/64748b?text=' . urlencode($barang->kode_barang);
+            @endphp
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="product-card card h-100">
                     <a href="{{ route('shop.product', $barang->id_barang) }}">
-                        <img src="https://placehold.co/400x300/e2e8f0/64748b?text={{ urlencode($barang->kode_barang) }}"
-                             alt="{{ $barang->nama_barang }}" loading="lazy">
+                        <img src="{{ $thumbSrc ?? $fallbackSrc }}"
+                             alt="{{ $barang->nama_barang }}" loading="lazy"
+                             onerror="this.src='{{ $fallbackSrc }}'">
                     </a>
                     <div class="card-body d-flex flex-column">
                         <p class="text-muted small mb-1">{{ $barang->kode_barang }}</p>

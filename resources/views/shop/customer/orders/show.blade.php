@@ -56,6 +56,21 @@
         font-size: 1.1rem;
         letter-spacing: 1px;
     }
+
+    .tier-progress { display: flex; gap: 0; margin-bottom: 1.5rem; border-radius: 10px; overflow: hidden; }
+    .tier-step {
+        flex: 1;
+        text-align: center;
+        padding: .7rem .3rem;
+        font-size: .72rem;
+        font-weight: 600;
+        background: #f3f4f6;
+        color: #9ca3af;
+        position: relative;
+    }
+    .tier-step.done { background: #10B981; color: #fff; }
+    .tier-step.current { background: #3B82F6; color: #fff; }
+    .tier-step i { display: block; font-size: 1rem; margin-bottom: .2rem; }
 </style>
 @endpush
 
@@ -71,6 +86,37 @@
 </div>
 
 <div class="container py-5">
+
+    {{-- 5-Tier Visual Progress --}}
+    @php
+        $tiers = [
+            \App\Models\Order::STATUS_DIBAYAR     => ['icon' => 'fa-wallet',       'label' => 'Dibayar'],
+            \App\Models\Order::STATUS_DIPROSES     => ['icon' => 'fa-box-open',     'label' => 'Diproses'],
+            \App\Models\Order::STATUS_DIKIRIM      => ['icon' => 'fa-truck-fast',   'label' => 'Dikirim'],
+            \App\Models\Order::STATUS_SUDAH_TIBA   => ['icon' => 'fa-house-circle-check', 'label' => 'Sudah Tiba'],
+            \App\Models\Order::STATUS_SELESAI      => ['icon' => 'fa-star',         'label' => 'Selesai'],
+        ];
+        $tierKeys = array_keys($tiers);
+        $currentIdx = array_search($order->status, $tierKeys);
+    @endphp
+
+    @if($currentIdx !== false)
+    <div class="tier-progress">
+        @foreach($tiers as $status => $info)
+            @php
+                $idx = array_search($status, $tierKeys);
+                $class = '';
+                if ($idx < $currentIdx) $class = 'done';
+                elseif ($idx === $currentIdx) $class = 'current';
+            @endphp
+            <div class="tier-step {{ $class }}">
+                <i class="fa-solid {{ $info['icon'] }}"></i>
+                {{ $info['label'] }}
+            </div>
+        @endforeach
+    </div>
+    @endif
+
     <div class="row g-4">
         {{-- Kolom Kiri: Timeline & Tracking --}}
         <div class="col-lg-7">
@@ -108,18 +154,21 @@
                             @endif
                         </li>
 
-                        {{-- Step 3: Pengemasan --}}
-                        @if(in_array($order->status, [\App\Models\Order::STATUS_PESANAN_DISIAPKAN, \App\Models\Order::STATUS_DISETUJUI, \App\Models\Order::STATUS_SEDANG_DIKIRIM, \App\Models\Order::STATUS_SELESAI]))
-                        <li class="timeline-item {{ in_array($order->status, [\App\Models\Order::STATUS_SEDANG_DIKIRIM, \App\Models\Order::STATUS_SELESAI]) ? 'success' : 'active' }}">
+                        {{-- Step 3: Diproses (Processing) --}}
+                        @if(in_array($order->status, [\App\Models\Order::STATUS_DIPROSES, \App\Models\Order::STATUS_DIKIRIM, \App\Models\Order::STATUS_SUDAH_TIBA, \App\Models\Order::STATUS_SELESAI, \App\Models\Order::STATUS_PESANAN_DISIAPKAN, \App\Models\Order::STATUS_DISETUJUI, \App\Models\Order::STATUS_SEDANG_DIKIRIM]))
+                        <li class="timeline-item {{ in_array($order->status, [\App\Models\Order::STATUS_DIKIRIM, \App\Models\Order::STATUS_SUDAH_TIBA, \App\Models\Order::STATUS_SELESAI, \App\Models\Order::STATUS_SEDANG_DIKIRIM]) ? 'success' : 'active' }}">
                             <div class="timeline-icon">
-                                @if(in_array($order->status, [\App\Models\Order::STATUS_SEDANG_DIKIRIM, \App\Models\Order::STATUS_SELESAI]))
+                                @if(in_array($order->status, [\App\Models\Order::STATUS_DIKIRIM, \App\Models\Order::STATUS_SUDAH_TIBA, \App\Models\Order::STATUS_SELESAI, \App\Models\Order::STATUS_SEDANG_DIKIRIM]))
                                     <i class="fa-solid fa-check"></i>
                                 @else
                                     <i class="fa-solid fa-box-open"></i>
                                 @endif
                             </div>
-                            <div class="timeline-title">Dikemas Admin</div>
-                            <p class="timeline-desc">Pesanan sedang disiapkan, dikemas, dan divalidasi oleh admin toko.</p>
+                            <div class="timeline-title">Pesanan Diproses</div>
+                            <p class="timeline-desc">Pesanan sedang disiapkan dan dikemas oleh admin toko.</p>
+                            @if($order->approved_at)
+                                <span class="timeline-time">{{ $order->approved_at->format('d M Y, H:i') }}</span>
+                            @endif
                             
                             @if($order->ready_to_ship_photo_url)
                                 <div class="mt-2">
@@ -130,10 +179,10 @@
                         @endif
 
                         {{-- Step 4: Dalam Pengiriman --}}
-                        @if(in_array($order->status, [\App\Models\Order::STATUS_SEDANG_DIKIRIM, \App\Models\Order::STATUS_SELESAI]))
-                        <li class="timeline-item {{ $order->status === \App\Models\Order::STATUS_SELESAI ? 'success' : 'active' }}">
+                        @if(in_array($order->status, [\App\Models\Order::STATUS_DIKIRIM, \App\Models\Order::STATUS_SUDAH_TIBA, \App\Models\Order::STATUS_SELESAI, \App\Models\Order::STATUS_SEDANG_DIKIRIM]))
+                        <li class="timeline-item {{ in_array($order->status, [\App\Models\Order::STATUS_SUDAH_TIBA, \App\Models\Order::STATUS_SELESAI]) ? 'success' : 'active' }}">
                             <div class="timeline-icon">
-                                @if($order->status === \App\Models\Order::STATUS_SELESAI)
+                                @if(in_array($order->status, [\App\Models\Order::STATUS_SUDAH_TIBA, \App\Models\Order::STATUS_SELESAI]))
                                     <i class="fa-solid fa-check"></i>
                                 @else
                                     <i class="fa-solid fa-truck-fast"></i>
@@ -141,6 +190,9 @@
                             </div>
                             <div class="timeline-title">Dalam Pengiriman</div>
                             <p class="timeline-desc">Paket sedang dalam perjalanan menuju lokasi Anda.</p>
+                            @if($order->shipped_at)
+                                <span class="timeline-time">{{ $order->shipped_at->format('d M Y, H:i') }}</span>
+                            @endif
                             
                             @if($order->tracking_number)
                             <div class="tracking-box text-center">
@@ -151,14 +203,20 @@
                         </li>
                         @endif
 
-                        {{-- Step 5: Selesai --}}
-                        @if($order->status === \App\Models\Order::STATUS_SELESAI)
-                        <li class="timeline-item success">
-                            <div class="timeline-icon"><i class="fa-solid fa-flag-checkered"></i></div>
-                            <div class="timeline-title text-success">Pesanan Selesai</div>
-                            <p class="timeline-desc">Paket telah tiba dan diterima dengan baik oleh pelanggan.</p>
-                            @if($order->shipped_at)
-                                <span class="timeline-time">{{ $order->shipped_at->format('d M Y, H:i') }}</span>
+                        {{-- Step 5: Sudah Tiba --}}
+                        @if(in_array($order->status, [\App\Models\Order::STATUS_SUDAH_TIBA, \App\Models\Order::STATUS_SELESAI]))
+                        <li class="timeline-item {{ $order->status === \App\Models\Order::STATUS_SELESAI ? 'success' : 'active' }}">
+                            <div class="timeline-icon">
+                                @if($order->status === \App\Models\Order::STATUS_SELESAI)
+                                    <i class="fa-solid fa-check"></i>
+                                @else
+                                    <i class="fa-solid fa-house-circle-check"></i>
+                                @endif
+                            </div>
+                            <div class="timeline-title">Paket Sudah Tiba</div>
+                            <p class="timeline-desc">Paket telah tiba dan diterima oleh pelanggan.</p>
+                            @if($order->arrived_at)
+                                <span class="timeline-time">{{ $order->arrived_at->format('d M Y, H:i') }}</span>
                             @endif
 
                             @if($order->handover_photo_url)
@@ -167,6 +225,15 @@
                                     <img src="{{ Storage::url($order->handover_photo_url) }}" alt="Bukti Terima" class="img-fluid rounded border" style="max-height: 200px;">
                                 </div>
                             @endif
+                        </li>
+                        @endif
+
+                        {{-- Step 6: Selesai (Reviewed) --}}
+                        @if($order->status === \App\Models\Order::STATUS_SELESAI)
+                        <li class="timeline-item success">
+                            <div class="timeline-icon"><i class="fa-solid fa-star"></i></div>
+                            <div class="timeline-title text-success">Pesanan Selesai</div>
+                            <p class="timeline-desc">Pesanan telah selesai. Terima kasih atas belanja Anda!</p>
                         </li>
                         @endif
                         
@@ -206,7 +273,8 @@
                                 <h6 class="mb-0">{{ $item->product_name }}</h6>
                                 <small class="text-muted">{{ $item->quantity }} x Rp {{ number_format($item->price, 0, ',', '.') }}</small>
                                 
-                                @if($order->status === \App\Models\Order::STATUS_SELESAI)
+                                {{-- Review Section: Show when Sudah Tiba OR Selesai --}}
+                                @if(in_array($order->status, [\App\Models\Order::STATUS_SUDAH_TIBA, \App\Models\Order::STATUS_SELESAI]))
                                     <div class="mt-2">
                                         @if($item->rating)
                                             <div class="text-warning small mb-1">
@@ -218,8 +286,8 @@
                                                 <p class="small text-muted mb-0 fst-italic">"{{ $item->review }}"</p>
                                             @endif
                                         @else
-                                            <button type="button" class="btn btn-sm btn-outline-primary mt-1" data-bs-toggle="modal" data-bs-target="#reviewModal{{ $item->id }}">
-                                                <i class="fa-solid fa-star me-1"></i>Beri Penilaian
+                                            <button type="button" class="btn btn-sm btn-outline-warning mt-1" data-bs-toggle="modal" data-bs-target="#reviewModal{{ $item->id }}">
+                                                <i class="fa-solid fa-star me-1"></i>Beri Ulasan
                                             </button>
 
                                             <!-- Modal Review -->
@@ -229,18 +297,23 @@
                                                         <form action="{{ route('shop.orders.review', $item->id) }}" method="POST">
                                                             @csrf
                                                             <div class="modal-header">
-                                                                <h5 class="modal-title">Nilai Produk: {{ $item->product_name }}</h5>
+                                                                <h5 class="modal-title">Beri Ulasan: {{ $item->product_name }}</h5>
                                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                             </div>
                                                             <div class="modal-body">
                                                                 <div class="mb-3">
                                                                     <label class="form-label fw-bold">Rating (1-5 Bintang)</label>
-                                                                    <select name="rating" class="form-select" required>
-                                                                        <option value="5">5 - Sangat Bagus (⭐⭐⭐⭐⭐)</option>
-                                                                        <option value="4">4 - Bagus (⭐⭐⭐⭐)</option>
-                                                                        <option value="3">3 - Cukup (⭐⭐⭐)</option>
-                                                                        <option value="2">2 - Kurang (⭐⭐)</option>
-                                                                        <option value="1">1 - Sangat Kurang (⭐)</option>
+                                                                    <div class="d-flex gap-2 mb-2" id="starRating{{ $item->id }}">
+                                                                        @for($s = 1; $s <= 5; $s++)
+                                                                            <i class="fa-regular fa-star fs-3 text-warning" style="cursor:pointer" data-rating="{{ $s }}" onclick="setRating({{ $item->id }}, {{ $s }})"></i>
+                                                                        @endfor
+                                                                    </div>
+                                                                    <select name="rating" id="ratingSelect{{ $item->id }}" class="form-select d-none" required>
+                                                                        <option value="5" selected>5 - Sangat Bagus</option>
+                                                                        <option value="4">4 - Bagus</option>
+                                                                        <option value="3">3 - Cukup</option>
+                                                                        <option value="2">2 - Kurang</option>
+                                                                        <option value="1">1 - Sangat Kurang</option>
                                                                     </select>
                                                                 </div>
                                                                 <div class="mb-3">
@@ -250,7 +323,7 @@
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane me-1"></i>Kirim Penilaian</button>
+                                                                <button type="submit" class="btn btn-warning"><i class="fa-solid fa-paper-plane me-1"></i>Kirim Ulasan</button>
                                                             </div>
                                                         </form>
                                                     </div>
@@ -303,3 +376,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    function setRating(itemId, rating) {
+        const container = document.getElementById('starRating' + itemId);
+        const select = document.getElementById('ratingSelect' + itemId);
+        const stars = container.querySelectorAll('i');
+        
+        stars.forEach((star, idx) => {
+            if (idx < rating) {
+                star.classList.remove('fa-regular');
+                star.classList.add('fa-solid');
+            } else {
+                star.classList.remove('fa-solid');
+                star.classList.add('fa-regular');
+            }
+        });
+        
+        select.value = rating;
+    }
+</script>
+@endpush

@@ -15,10 +15,16 @@ class PaymentController extends Controller
      */
     public function invoice(string $token)
     {
+        $orderNumber = $token;
+        
         try {
+            // Coba decrypt jika itu token terenkripsi
             $orderNumber = decrypt($token);
         } catch (\Exception $e) {
-            abort(404);
+            // Jika gagal decrypt, asumsikan itu raw order number (ORD-...)
+            if (!str_starts_with($token, 'ORD-')) {
+                abort(404, 'Tautan tidak valid.');
+            }
         }
 
         $order = Order::with('items')
@@ -34,10 +40,16 @@ class PaymentController extends Controller
      */
     public function downloadPdf(string $token)
     {
+        $orderNumber = $token;
+
         try {
+            // Coba decrypt jika itu token terenkripsi
             $orderNumber = decrypt($token);
         } catch (\Exception $e) {
-            abort(404);
+            // Jika gagal decrypt, asumsikan itu raw order number (ORD-...)
+            if (!str_starts_with($token, 'ORD-')) {
+                abort(404, 'Tautan tidak valid.');
+            }
         }
 
         $order = Order::with('items')

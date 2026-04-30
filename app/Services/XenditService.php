@@ -57,10 +57,8 @@ class XenditService
             'description'      => $params['description'] ?? "Pembayaran pesanan {$params['order_number']}",
             'currency'         => 'IDR',
             'invoice_duration' => 86400, // 24 jam
-            'success_redirect_url' => url('/order/success/' . encrypt($params['order_number'])),
+            'success_redirect_url' => url('/order/success/' . rtrim(strtr(base64_encode($params['order_number']), '+/', '-_'), '=')),
             'failure_redirect_url' => url("/cart"),
-            // Mengecualikan Opsi Kartu Kredit dan Direct Debit sesuai permintaan
-            'payment_methods'  => ['EWALLET', 'RETAIL_OUTLET', 'QRIS', 'VIRTUAL_ACCOUNT'],
         ];
 
         // Tambahkan customer info jika tersedia

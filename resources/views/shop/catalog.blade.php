@@ -146,12 +146,18 @@
     {{-- ── Product Grid ─────────────────────────────────────────── --}}
     <div class="row g-4">
         @forelse($barang as $b)
+        @php
+            $imgData = is_array($b->image_url) ? $b->image_url : (is_string($b->image_url) ? json_decode($b->image_url, true) : null);
+            $thumbSrc = !empty($imgData['thumbnail']) ? asset('storage/' . $imgData['thumbnail']) : null;
+            $fallbackSrc = 'https://placehold.co/400x300/e2e8f0/64748b?text=' . urlencode($b->kode_barang);
+        @endphp
         <div class="col-6 col-md-4 col-lg-3">
             <div class="product-card card h-100">
                 <a href="{{ route('shop.product', $b->id_barang) }}">
-                    <img src="https://placehold.co/400x300/e2e8f0/64748b?text={{ urlencode($b->kode_barang) }}"
+                    <img src="{{ $thumbSrc ?? $fallbackSrc }}"
                          alt="{{ $b->nama_barang }}" loading="lazy"
-                         style="height:180px;object-fit:cover;width:100%">
+                         style="height:180px;object-fit:cover;width:100%"
+                         onerror="this.src='{{ $fallbackSrc }}'">
                 </a>
                 <div class="card-body d-flex flex-column">
                     <span class="text-muted" style="font-size:.75rem">{{ $b->kode_barang }}</span>

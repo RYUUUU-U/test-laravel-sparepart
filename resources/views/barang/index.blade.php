@@ -14,6 +14,7 @@
         <thead class="table-dark">
             <tr>
                 <th>No</th>
+                <th>Foto</th>
                 <th>Kode</th>
                 <th>Nama Barang</th>
                 <th>Harga Beli</th>
@@ -25,8 +26,19 @@
         </thead>
         <tbody>
             @forelse($barang as $no => $d)
+            @php
+                $imgData = is_array($d->image_url) ? $d->image_url : (is_string($d->image_url) ? json_decode($d->image_url, true) : null);
+                $thumbSrc = !empty($imgData['thumbnail']) ? asset('storage/' . $imgData['thumbnail']) : null;
+            @endphp
             <tr>
                 <td>{{ $no + 1 }}</td>
+                <td class="text-center" style="width:60px">
+                    @if($thumbSrc)
+                        <img src="{{ $thumbSrc }}" alt="{{ $d->nama_barang }}" class="rounded" style="width:45px;height:45px;object-fit:cover;">
+                    @else
+                        <span class="badge bg-light text-muted"><i class="fa-regular fa-image"></i></span>
+                    @endif
+                </td>
                 <td><span class="badge bg-secondary">{{ $d->kode_barang }}</span></td>
                 <td>{{ $d->nama_barang }}</td>
                 <td>Rp {{ number_format($d->harga_beli) }}</td>
@@ -43,7 +55,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="8" class="text-center">Belum ada data barang.</td></tr>
+            <tr><td colspan="9" class="text-center">Belum ada data barang.</td></tr>
             @endforelse
         </tbody>
     </table>

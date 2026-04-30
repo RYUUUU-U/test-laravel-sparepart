@@ -56,6 +56,18 @@
                     <i class="fa-solid fa-cart-shopping me-1"></i>Pesanan Online
                 </a>
             </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-chart-pie me-1"></i>Laporan
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ route('laporan.keuangan') }}"><i class="fa-solid fa-coins me-2"></i>Laporan Keuangan</a></li>
+                    <li><a class="dropdown-item" href="{{ route('laporan.penjualan') }}"><i class="fa-solid fa-chart-bar me-2"></i>Laporan Penjualan</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ route('laporan.cetak-keluar') }}"><i class="fa-solid fa-print me-2"></i>Cetak Barang Keluar</a></li>
+                    <li><a class="dropdown-item" href="{{ route('laporan.cetak-masuk') }}"><i class="fa-solid fa-print me-2"></i>Cetak Barang Masuk</a></li>
+                </ul>
+            </li>
         @endif
 
         {{-- Menu Kasir --}}

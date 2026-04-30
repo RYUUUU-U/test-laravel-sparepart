@@ -66,9 +66,9 @@ class CustomerOrderController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        // Pastikan status order adalah selesai
-        if ($orderItem->order->status !== Order::STATUS_SELESAI) {
-            return back()->with('error', 'Anda hanya dapat memberikan penilaian untuk pesanan yang sudah selesai.');
+        // Pastikan status order adalah sudah_tiba atau selesai
+        if (! in_array($orderItem->order->status, [Order::STATUS_SUDAH_TIBA, Order::STATUS_SELESAI])) {
+            return back()->with('error', 'Anda hanya dapat memberikan penilaian untuk pesanan yang sudah tiba atau selesai.');
         }
 
         // Pastikan belum pernah direview

@@ -37,12 +37,13 @@ class BarangController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama'   => 'required|string|max:100',
-            'beli'   => 'required',
-            'jual'   => 'required',
-            'stok'   => 'required|integer|min:0',
-            'satuan' => 'required|string|max:20',
-            'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'nama'      => 'required|string|max:100',
+            'beli'      => 'required',
+            'jual'      => 'required',
+            'stok'      => 'required|integer|min:0',
+            'satuan'    => 'required|string|max:20',
+            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'deskripsi' => 'nullable|string|max:5000',
         ]);
 
         // Bersihkan format rupiah (titik sebagai pemisah ribuan)
@@ -66,6 +67,7 @@ class BarangController extends Controller
             'stok'        => $request->stok,
             'satuan'      => $request->satuan,
             'image_url'   => $imageUrl,
+            'deskripsi'   => $request->deskripsi,
         ]);
 
         return redirect()->route('barang.index')
@@ -87,12 +89,13 @@ class BarangController extends Controller
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'nama'   => 'required|string|max:100',
-            'beli'   => 'required',
-            'jual'   => 'required',
-            'stok'   => 'required|integer|min:0',
-            'satuan' => 'required|string|max:20',
-            'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'nama'      => 'required|string|max:100',
+            'beli'      => 'required',
+            'jual'      => 'required',
+            'stok'      => 'required|integer|min:0',
+            'satuan'    => 'required|string|max:20',
+            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'deskripsi' => 'nullable|string|max:5000',
         ]);
 
         $barang = Barang::findOrFail($id);
@@ -103,6 +106,7 @@ class BarangController extends Controller
             'harga_jual'  => (int) str_replace('.', '', $request->jual),
             'stok'        => $request->stok,
             'satuan'      => $request->satuan,
+            'deskripsi'   => $request->deskripsi,
         ];
 
         // Upload gambar baru jika ada, hapus yang lama

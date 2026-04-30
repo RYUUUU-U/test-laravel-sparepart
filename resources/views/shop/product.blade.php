@@ -49,8 +49,24 @@
     }
     .related-card { border-radius: 14px; border: none; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
     .related-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.12); transition: all .2s; }
+    .desc-section {
+        background: #f8f9fa;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+    .desc-section h4 { font-weight: 800; color: #1a1a2e; margin-bottom: 1rem; }
+    .desc-section .desc-content { color: #374151; line-height: 1.8; white-space: pre-line; }
 </style>
 @endpush
+
+@php
+    $imgData = is_array($barang->image_url) ? $barang->image_url : (is_string($barang->image_url) ? json_decode($barang->image_url, true) : null);
+    $mediumSrc = !empty($imgData['medium']) ? asset('storage/' . $imgData['medium']) : null;
+    $originalSrc = !empty($imgData['original']) ? asset('storage/' . $imgData['original']) : null;
+    $fallbackSrc = 'https://placehold.co/600x450/e2e8f0/64748b?text=' . urlencode($barang->kode_barang);
+    $mainImg = $mediumSrc ?? $fallbackSrc;
+@endphp
 
 @section('content')
 <div class="container py-5">
@@ -67,8 +83,17 @@
     <div class="row g-5 align-items-start">
         {{-- ── Gambar ───────────────────────────────────────── --}}
         <div class="col-md-5">
-            <img src="https://placehold.co/600x450/e2e8f0/64748b?text={{ urlencode($barang->kode_barang) }}"
-                 alt="{{ $barang->nama_barang }}" class="product-detail-img">
+            @if($originalSrc)
+                <a href="{{ $originalSrc }}" target="_blank" title="Lihat gambar penuh">
+                    <img src="{{ $mainImg }}"
+                         alt="{{ $barang->nama_barang }}" class="product-detail-img"
+                         onerror="this.src='{{ $fallbackSrc }}'">
+                </a>
+            @else
+                <img src="{{ $mainImg }}"
+                     alt="{{ $barang->nama_barang }}" class="product-detail-img"
+                     onerror="this.src='{{ $fallbackSrc }}'">
+            @endif
             <div class="text-center mt-3">
                 <span class="badge bg-light text-muted border me-2 p-2">
                     <i class="fa-solid fa-tag me-1 text-danger"></i>{{ $barang->kode_barang }}
@@ -157,18 +182,32 @@
         </div>
     </div>
 
+    {{-- ── Deskripsi Produk ──────────────────────────────────────── --}}
+    @if($barang->deskripsi)
+    <div class="desc-section">
+        <h4><i class="fa-solid fa-align-left me-2 text-danger"></i>Deskripsi Produk</h4>
+        <div class="desc-content">{{ $barang->deskripsi }}</div>
+    </div>
+    @endif
+
     {{-- ── Related Products ─────────────────────────────────────── --}}
     @if($related->count())
     <div class="mt-5">
         <h4 class="fw-800 mb-4">Produk Terkait</h4>
         <div class="row g-4">
             @foreach($related as $r)
+            @php
+                $rImgData = is_array($r->image_url) ? $r->image_url : (is_string($r->image_url) ? json_decode($r->image_url, true) : null);
+                $rThumbSrc = !empty($rImgData['thumbnail']) ? asset('storage/' . $rImgData['thumbnail']) : null;
+                $rFallback = 'https://placehold.co/400x300/e2e8f0/64748b?text=' . urlencode($r->kode_barang);
+            @endphp
             <div class="col-6 col-md-3">
                 <div class="related-card card h-100 overflow-hidden">
                     <a href="{{ route('shop.product', $r->id_barang) }}">
-                        <img src="https://placehold.co/400x300/e2e8f0/64748b?text={{ urlencode($r->kode_barang) }}"
+                        <img src="{{ $rThumbSrc ?? $rFallback }}"
                              alt="{{ $r->nama_barang }}"
-                             style="width:100%;height:160px;object-fit:cover">
+                             style="width:100%;height:160px;object-fit:cover"
+                             onerror="this.src='{{ $rFallback }}'">
                     </a>
                     <div class="card-body p-3">
                         <p class="small text-muted mb-1">{{ $r->kode_barang }}</p>

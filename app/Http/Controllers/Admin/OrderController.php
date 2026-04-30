@@ -53,6 +53,37 @@ class OrderController extends Controller
     }
 
     /**
+     * Progresikan status ke tahap berikutnya dalam alur 5-tier.
+     *
+     * PATCH /orders/{id}/advance
+     */
+    public function advanceStatus(int $id)
+    {
+        $order = Order::findOrFail($id);
+        $nextStatus = $order->nextStatus();
+
+        if (! $nextStatus) {
+            return back()->with('error', "Pesanan {$order->order_number} tidak bisa dilanjutkan dari status '{$order->statusLabel()}'.");
+        }
+
+        $data = ['status' => $nextStatus];
+
+        // Catat timestamp sesuai tahap
+        if ($nextStatus === Order::STATUS_DIPROSES) {
+            $data['approved_at'] = now();
+            $data['approved_by'] = session('id_user');
+        } elseif ($nextStatus === Order::STATUS_DIKIRIM) {
+            $data['shipped_at'] = now();
+        } elseif ($nextStatus === Order::STATUS_SUDAH_TIBA) {
+            $data['arrived_at'] = now();
+        }
+
+        $order->update($data);
+
+        return back()->with('success', "Pesanan {$order->order_number} berhasil diubah ke status: {$order->statusLabel()}.");
+    }
+
+    /**
      * Setujui pesanan — ubah status ke 'disetujui' dan catat siapa yang approve.
      *
      * Alur: pesanan_disiapkan → disetujui

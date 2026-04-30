@@ -17,12 +17,13 @@
                 <label class="form-label small fw-bold">Filter Status</label>
                 <select name="status" class="form-select" onchange="this.form.submit()">
                     <option value="">Semua Status</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
-                    <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Diproses</option>
-                    <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Dikirim</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai</option>
-                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Dibatalkan</option>
+                    <option value="awaiting_payment" {{ request('status') == 'awaiting_payment' ? 'selected' : '' }}>Menunggu Pembayaran</option>
+                    <option value="dibayar" {{ request('status') == 'dibayar' ? 'selected' : '' }}>Dibayar</option>
+                    <option value="diproses" {{ request('status') == 'diproses' ? 'selected' : '' }}>Diproses</option>
+                    <option value="dikirim" {{ request('status') == 'dikirim' ? 'selected' : '' }}>Dikirim</option>
+                    <option value="sudah_tiba" {{ request('status') == 'sudah_tiba' ? 'selected' : '' }}>Sudah Tiba</option>
+                    <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                    <option value="dibatalkan" {{ request('status') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
                 </select>
             </div>
             <div class="col-md-9 text-end">
@@ -60,8 +61,8 @@
                             </td>
                             <td class="fw-bold text-danger">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
                             <td>
-                                <span class="badge @if($order->status == 'completed') bg-success @elseif($order->status == 'cancelled') bg-danger @elseif($order->status == 'paid') bg-primary @else bg-warning text-dark @endif">
-                                    {{ strtoupper($order->status) }}
+                                <span class="badge {{ $order->statusBadgeClass() }}">
+                                    {{ $order->statusLabel() }}
                                 </span>
                             </td>
                             <td>

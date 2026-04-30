@@ -13,7 +13,7 @@
                     <small><i class="fa fa-info-circle"></i> Kode Barang akan dibuat otomatis dari Nama Barang.</small>
                 </div>
 
-                <form method="POST" action="{{ route('barang.store') }}">
+                <form method="POST" action="{{ route('barang.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
                         <label>Nama Barang</label>
@@ -49,6 +49,27 @@
                             @error('satuan')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
+
+                    {{-- Gambar Produk --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Gambar Produk</label>
+                        <input type="file" name="image" id="imageInput" class="form-control @error('image') is-invalid @enderror"
+                               accept="image/jpeg,image/png,image/webp">
+                        <small class="text-muted">Format: JPG, PNG, WebP. Maks 5MB. Akan dikonversi otomatis ke WebP.</small>
+                        @error('image')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div id="imagePreview" class="mt-2" style="display:none;">
+                            <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-height:180px;">
+                        </div>
+                    </div>
+
+                    {{-- Deskripsi --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Deskripsi Produk</label>
+                        <textarea name="deskripsi" class="form-control @error('deskripsi') is-invalid @enderror"
+                                  rows="4" placeholder="Tulis deskripsi detail produk...">{{ old('deskripsi') }}</textarea>
+                        @error('deskripsi')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
                     <button type="submit" class="btn btn-success">Simpan Data</button>
                     <a href="{{ route('barang.index') }}" class="btn btn-secondary">Kembali</a>
                 </form>
@@ -65,10 +86,23 @@
             split = number_string.split(','), sisa = split[0].length % 3,
             rupiah = split[0].substr(0, sisa),
             ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-        if (ribuan) { separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
+        if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
         return rupiah;
     }
     document.getElementById('rupiah1').addEventListener('keyup', function(){ this.value = formatRupiah(this.value); });
     document.getElementById('rupiah2').addEventListener('keyup', function(){ this.value = formatRupiah(this.value); });
+
+    // Image preview
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        const img = document.getElementById('previewImg');
+        if (file) {
+            img.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    });
 </script>
 @endpush

@@ -79,21 +79,39 @@
         
         /* ── OFFCANVAS MOBILE ───────────────────────────────── */
         .offcanvas-shop {
-            background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 100%);
+            background: linear-gradient(180deg, var(--dark) 0%, #0d1117 100%);
+            max-width: 300px;
+        }
+        .offcanvas-shop .offcanvas-header {
+            border-bottom: 1px solid rgba(255,255,255,.08);
+            padding: 1.2rem 1.5rem;
+        }
+        .offcanvas-shop .offcanvas-body { padding: 1rem 0; }
+        .offcanvas-shop .nav-link {
+            padding: .75rem 1.5rem !important;
+            border-radius: 0 !important;
+            font-size: .95rem;
+            border-left: 3px solid transparent;
+        }
+        .offcanvas-shop .nav-link:hover,
+        .offcanvas-shop .nav-link.active {
+            background: rgba(230,57,70,.1) !important;
+            border-left-color: var(--primary);
+        }
+        .offcanvas-shop .nav-divider {
+            border-top: 1px solid rgba(255,255,255,.08);
+            margin: .5rem 1.5rem;
+        }
+        .offcanvas-shop .nav-section-label {
+            color: rgba(255,255,255,.35);
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: .8rem 1.5rem .3rem;
         }
         
-        /* ── CUSTOMER DROPDOWN ──────────────────────────────── */
-        .customer-menu .dropdown-menu {
-            border: none;
-            box-shadow: 0 8px 32px rgba(0,0,0,.12);
-            border-radius: 12px;
-            padding: .5rem;
-        }
-        .customer-menu .dropdown-item {
-            border-radius: 8px;
-            padding: .5rem .9rem;
-            font-size: .9rem;
-        }
+        /* ── CUSTOMER ACCOUNT LINK ─────────────────────────── */
 
         /* ── FLASH MESSAGES ─────────────────────────────────── */
         .flash-wrap { position: sticky; top: 0; z-index: 1050; }
@@ -183,78 +201,142 @@
             <i class="fa-solid fa-motorcycle me-2"></i>Motor<span>Parts</span>
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#shopOffcanvas">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        {{-- Mobile: Cart icon + Hamburger --}}
+        <div class="d-flex align-items-center gap-2 d-lg-none">
+            @php $cartCount = collect(session('cart', []))->sum('quantity'); @endphp
+            <a href="{{ route('shop.cart') }}" class="cart-btn nav-link position-relative">
+                <i class="fa-solid fa-cart-shopping"></i>
+                @if($cartCount > 0)
+                    <span class="cart-badge">{{ $cartCount }}</span>
+                @endif
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#shopOffcanvas">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
 
-        <div class="offcanvas offcanvas-start offcanvas-shop" tabindex="-1" id="shopOffcanvas" aria-labelledby="shopOffcanvasLabel">
-            <div class="offcanvas-header border-bottom border-light border-opacity-10">
-                <h5 class="offcanvas-title text-white fw-bold" id="shopOffcanvasLabel">
+        {{-- Offcanvas (Mobile) / Collapse (Desktop) --}}
+        <div class="offcanvas offcanvas-start offcanvas-shop d-lg-none" tabindex="-1" id="shopOffcanvas">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title text-white fw-bold">
                     <i class="fa-solid fa-motorcycle me-2" style="color:var(--primary)"></i>Motor<span style="color:var(--primary)">Parts</span>
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
             </div>
-            
             <div class="offcanvas-body">
-                {{-- Left links --}}
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                <div class="nav-section-label">Menu</div>
+                <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('shop.home') ? 'active' : '' }}"
-                           href="{{ route('shop.home') }}">
-                            <i class="fa-solid fa-house-chimney me-2"></i>Home
+                        <a class="nav-link {{ request()->routeIs('shop.home') ? 'active' : '' }}" href="{{ route('shop.home') }}">
+                            <i class="fa-solid fa-house-chimney fa-fw me-2"></i>Beranda
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('shop.catalog') ? 'active' : '' }}"
-                           href="{{ route('shop.catalog') }}">
-                            <i class="fa-solid fa-th-large me-2"></i>Katalog
+                        <a class="nav-link {{ request()->routeIs('shop.catalog') ? 'active' : '' }}" href="{{ route('shop.catalog') }}">
+                            <i class="fa-solid fa-th-large fa-fw me-2"></i>Produk
                         </a>
                     </li>
-                    
-                    {{-- Keranjang sekarang tergabung di kiri agar seragam --}}
-                    @php $cartCount = collect(session('cart', []))->sum('quantity'); @endphp
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('shop.cart') ? 'active' : '' }}" href="{{ route('shop.cart') }}">
-                            <i class="fa-solid fa-cart-shopping me-2"></i>Keranjang
+                            <i class="fa-solid fa-cart-shopping fa-fw me-2"></i>Keranjang
                             @if($cartCount > 0)
                                 <span class="cart-badge">{{ $cartCount }}</span>
                             @endif
                         </a>
                     </li>
-
-                    @if(session()->has('customer_id'))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('shop.orders.*') ? 'active' : '' }}" 
-                           href="{{ route('shop.orders.index') }}">
-                            <i class="fa-solid fa-box-open me-2"></i>Pesanan Saya
-                        </a>
-                    </li>
-                    @endif
                 </ul>
+                
+                <div class="nav-divider"></div>
 
-                {{-- Right side (User Actions) --}}
-                <hr class="d-lg-none text-white-50 my-2">
-                <ul class="navbar-nav align-items-lg-center gap-1 mt-2 mt-lg-0">
-                    @if(session()->has('customer_id'))
+                @if(session()->has('customer_id'))
+                    <div class="nav-section-label">Akun</div>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('shop.orders.*') ? 'active' : '' }}" href="{{ route('shop.orders.index') }}">
+                                <i class="fa-solid fa-box-open fa-fw me-2"></i>Pesanan Saya
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('shop.account.settings') ? 'active' : '' }}" href="{{ route('shop.account.settings') }}">
-                                <i class="fa-solid fa-circle-user me-2"></i>Akun Saya
+                                <i class="fa-solid fa-gear fa-fw me-2"></i>Pengaturan
                             </a>
                         </li>
-                    @else
+                    </ul>
+                    <div class="nav-divider"></div>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <form action="{{ route('customer.logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent" style="color: #ef4444 !important;">
+                                    <i class="fa-solid fa-right-from-bracket fa-fw me-2"></i>Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                @else
+                    <div class="nav-section-label">Akun</div>
+                    <ul class="navbar-nav">
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('customer.login') }}">
-                                <i class="fa-solid fa-right-to-bracket me-2"></i>Login
+                                <i class="fa-solid fa-right-to-bracket fa-fw me-2"></i>Sign In
                             </a>
                         </li>
-                        <li class="nav-item ms-lg-2">
-                            <a class="nav-link btn btn-outline-light btn-sm px-3 d-inline-block w-100 text-center" href="{{ route('customer.register') }}">
-                                Daftar
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('customer.register') }}">
+                                <i class="fa-solid fa-user-plus fa-fw me-2"></i>Sign Up
                             </a>
                         </li>
-                    @endif
-                </ul>
+                    </ul>
+                @endif
             </div>
+        </div>
+
+        {{-- Desktop Navbar --}}
+        <div class="collapse navbar-collapse d-none d-lg-flex">
+            @php if(!isset($cartCount)) $cartCount = collect(session('cart', []))->sum('quantity'); @endphp
+            <ul class="navbar-nav me-auto mb-0 gap-1">
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('shop.home') ? 'active' : '' }}" href="{{ route('shop.home') }}">
+                        <i class="fa-solid fa-house-chimney me-1"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('shop.catalog') ? 'active' : '' }}" href="{{ route('shop.catalog') }}">
+                        <i class="fa-solid fa-th-large me-1"></i> Katalog
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('shop.cart') ? 'active' : '' }}" href="{{ route('shop.cart') }}">
+                        <i class="fa-solid fa-cart-shopping me-1"></i> Keranjang
+                        @if($cartCount > 0)
+                            <span class="cart-badge">{{ $cartCount }}</span>
+                        @endif
+                    </a>
+                </li>
+            </ul>
+
+            {{-- Right side: Account --}}
+            <ul class="navbar-nav align-items-center gap-1">
+                @if(session()->has('customer_id'))
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-2 {{ request()->routeIs('shop.account.settings') ? 'active' : '' }}" href="{{ route('shop.account.settings') }}">
+                            <i class="fa-solid fa-circle-user"></i>
+                            {{ session('customer_name') }}
+                        </a>
+                    </li>
+                @else
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('customer.login') }}">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> Login
+                        </a>
+                    </li>
+                    <li class="nav-item ms-1">
+                        <a class="nav-link btn btn-outline-light btn-sm px-3" href="{{ route('customer.register') }}">
+                            Daftar
+                        </a>
+                    </li>
+                @endif
+            </ul>
         </div>
     </div>
 </nav>
@@ -313,7 +395,8 @@
             <div class="col-md-3">
                 <h6>Akun</h6>
                 @if(session()->has('customer_id'))
-                    <a href="{{ route('shop.cart') }}">Keranjang Saya</a>
+                    <a href="{{ route('shop.orders.index') }}">Pesanan Saya</a>
+                    <a href="{{ route('shop.account.settings') }}">Pengaturan Akun</a>
                 @else
                     <a href="{{ route('customer.login') }}">Login Pelanggan</a>
                     <a href="{{ route('customer.register') }}">Daftar Akun</a>

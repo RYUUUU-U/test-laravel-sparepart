@@ -40,6 +40,7 @@ class Order extends Model
         'approved_at',
         'shipped_at',
         'approved_by',
+        'arrived_at',
     ];
 
     protected $casts = [
@@ -49,16 +50,24 @@ class Order extends Model
         'paid_at'      => 'datetime',
         'approved_at'  => 'datetime',
         'shipped_at'   => 'datetime',
+        'arrived_at'   => 'datetime',
     ];
 
-    // ── Status Constants ──────────────────────────────────────────────────────
-
+    // ── Status Constants (5-Tier Workflow) ────────────────────────────────────
+    // Old statuses kept for backward compatibility with existing orders
     const STATUS_PENDING             = 'pending';
     const STATUS_AWAITING_PAYMENT    = 'awaiting_payment';
+    // New 5-tier statuses: Paid → Processed → Shipped → Arrived → Reviewed
+    const STATUS_DIBAYAR             = 'dibayar';              // Paid
+    const STATUS_DIPROSES            = 'diproses';             // Processing
+    const STATUS_DIKIRIM             = 'dikirim';              // Shipped
+    const STATUS_SUDAH_TIBA          = 'sudah_tiba';           // Arrived
+    const STATUS_SELESAI             = 'selesai';              // Reviewed / Completed
+    // Legacy statuses (kept for old orders)
     const STATUS_PESANAN_DISIAPKAN   = 'pesanan_disiapkan';
     const STATUS_DISETUJUI           = 'disetujui';
     const STATUS_SEDANG_DIKIRIM      = 'sedang_dikirim';
-    const STATUS_SELESAI             = 'selesai';
+    // Terminal statuses
     const STATUS_DIBATALKAN          = 'dibatalkan';
     const STATUS_GAGAL               = 'gagal';
 
@@ -74,13 +83,40 @@ class Order extends Model
         return [
             self::STATUS_PENDING,
             self::STATUS_AWAITING_PAYMENT,
+            self::STATUS_DIBAYAR,
+            self::STATUS_DIPROSES,
+            self::STATUS_DIKIRIM,
+            self::STATUS_SUDAH_TIBA,
+            self::STATUS_SELESAI,
+            // Legacy
             self::STATUS_PESANAN_DISIAPKAN,
             self::STATUS_DISETUJUI,
             self::STATUS_SEDANG_DIKIRIM,
-            self::STATUS_SELESAI,
+            // Terminal
             self::STATUS_DIBATALKAN,
             self::STATUS_GAGAL,
         ];
+    }
+
+    /**
+     * Urutan progres 5-tier (untuk tombol "Next Status" di admin).
+     */
+    public static function fiveTierFlow(): array
+    {
+        return [
+            self::STATUS_DIBAYAR     => self::STATUS_DIPROSES,
+            self::STATUS_DIPROSES    => self::STATUS_DIKIRIM,
+            self::STATUS_DIKIRIM     => self::STATUS_SUDAH_TIBA,
+            self::STATUS_SUDAH_TIBA  => self::STATUS_SELESAI,
+        ];
+    }
+
+    /**
+     * Status berikutnya dalam alur 5-tier, atau null jika sudah di akhir.
+     */
+    public function nextStatus(): ?string
+    {
+        return self::fiveTierFlow()[$this->status] ?? null;
     }
 
     // ── Relations ─────────────────────────────────────────────────────────────
@@ -134,6 +170,14 @@ class Order extends Model
     }
 
     /**
+     * Cek apakah semua item sudah direview.
+     */
+    public function isFullyReviewed(): bool
+    {
+        return $this->items->every(fn ($item) => $item->rating !== null);
+    }
+
+    /**
      * Kembalikan label status pesanan yang ramah untuk ditampilkan.
      */
     public function statusLabel(): string
@@ -144,10 +188,16 @@ class Order extends Model
         return match ($this->status) {
             self::STATUS_PENDING             => 'Menunggu Checkout',
             self::STATUS_AWAITING_PAYMENT    => 'Menunggu Pembayaran',
+            self::STATUS_DIBAYAR             => 'Dibayar',
+            self::STATUS_DIPROSES            => 'Sedang Diproses',
+            self::STATUS_DIKIRIM             => 'Sedang Dikirim',
+            self::STATUS_SUDAH_TIBA          => 'Sudah Tiba',
+            self::STATUS_SELESAI             => 'Selesai',
+            // Legacy
             self::STATUS_PESANAN_DISIAPKAN   => 'Pesanan Disiapkan',
             self::STATUS_DISETUJUI           => 'Disetujui Admin',
             self::STATUS_SEDANG_DIKIRIM      => 'Sedang Dikirim',
-            self::STATUS_SELESAI             => 'Selesai',
+            // Terminal
             self::STATUS_DIBATALKAN          => 'Dibatalkan',
             self::STATUS_GAGAL               => 'Pembayaran Gagal',
             default                          => ucfirst($this->status),
@@ -162,10 +212,16 @@ class Order extends Model
         return match ($this->status) {
             self::STATUS_PENDING             => 'bg-secondary',
             self::STATUS_AWAITING_PAYMENT    => 'bg-warning text-dark',
+            self::STATUS_DIBAYAR             => 'bg-success',
+            self::STATUS_DIPROSES            => 'bg-info text-dark',
+            self::STATUS_DIKIRIM             => 'bg-primary',
+            self::STATUS_SUDAH_TIBA          => 'bg-info',
+            self::STATUS_SELESAI             => 'bg-success',
+            // Legacy
             self::STATUS_PESANAN_DISIAPKAN   => 'bg-info text-dark',
             self::STATUS_DISETUJUI           => 'bg-primary',
             self::STATUS_SEDANG_DIKIRIM      => 'bg-info',
-            self::STATUS_SELESAI             => 'bg-success',
+            // Terminal
             self::STATUS_DIBATALKAN          => 'bg-danger',
             self::STATUS_GAGAL               => 'bg-danger',
             default                          => 'bg-secondary',

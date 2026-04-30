@@ -76,13 +76,16 @@ class CartController extends Controller
                 return back()->with('error', "Stok {$barang->nama_barang} tidak mencukupi. Tersisa {$barang->stok} unit.");
             }
 
+            $imgData = is_array($barang->image_url) ? $barang->image_url : (is_string($barang->image_url) ? json_decode($barang->image_url, true) : null);
+
             $cart[$id] = [
-                'id'       => $id,
-                'name'     => $barang->nama_barang,
-                'code'     => $barang->kode_barang,
-                'price'    => (int) $barang->harga_jual,
-                'quantity' => $qty,
-                'subtotal' => (int) $barang->harga_jual * $qty,
+                'id'        => $id,
+                'name'      => $barang->nama_barang,
+                'code'      => $barang->kode_barang,
+                'price'     => (int) $barang->harga_jual,
+                'quantity'  => $qty,
+                'subtotal'  => (int) $barang->harga_jual * $qty,
+                'image_url' => $imgData['thumbnail'] ?? null,
             ];
         }
 

@@ -85,7 +85,18 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->session()->flush();
+        // Hapus hanya session admin — session customer (customer_id, dll) tidak tersentuh
+        session()->forget([
+            'id_user',
+            'nama_lengkap',
+            'username',
+            'role',
+            'status',
+        ]);
+
+        // Regenerate CSRF token for security
+        $request->session()->regenerateToken();
+
         return redirect()->route('login');
     }
 

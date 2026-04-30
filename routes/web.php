@@ -90,10 +90,9 @@ Route::middleware('checkCustomer')->name('shop.')->group(function () {
     Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
     Route::delete('/cart',      [CartController::class, 'clear'])->name('cart.clear');
 
-    // Checkout (rate limited: 1x per 30 detik per customer)
+    // Checkout
     Route::get('/checkout',  [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout', [CheckoutController::class, 'store'])
-        ->middleware('throttle:checkout')
         ->name('checkout.store');
 
     // Portal pelanggan (Riwayat, Lacak & Pengaturan)
@@ -151,6 +150,7 @@ Route::middleware(['checkLogin'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
         Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
         Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.update-status');
+        Route::patch('/orders/{id}/advance', [OrderController::class, 'advanceStatus'])->name('admin.orders.advance');
         Route::patch('/orders/{id}/approve', [OrderController::class, 'approve'])->name('admin.orders.approve');
         Route::post('/orders/{id}/handover', [OrderController::class, 'uploadHandover'])->name('admin.orders.handover');
         Route::post('/orders/{id}/ship', [OrderController::class, 'ship'])->name('admin.orders.ship');
@@ -176,6 +176,8 @@ Route::middleware(['checkLogin'])->group(function () {
 
     // ── Laporan & Export ──────────────────────────────────────────────────
     Route::prefix('laporan')->name('laporan.')->group(function () {
+        Route::get('/keuangan',      [LaporanController::class, 'keuangan'])->name('keuangan');
+        Route::get('/penjualan',     [LaporanController::class, 'penjualan'])->name('penjualan');
         Route::get('/export-keluar', [LaporanController::class, 'exportExcelKeluar'])->name('export-keluar');
         Route::get('/export-masuk',  [LaporanController::class, 'exportExcelMasuk'])->name('export-masuk');
         Route::get('/cetak-keluar',  [LaporanController::class, 'cetakKeluar'])->name('cetak-keluar');
