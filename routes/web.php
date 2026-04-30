@@ -8,28 +8,110 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Shop\CustomerAuthController;
+use App\Http\Controllers\Shop\ShopController;
+use App\Http\Controllers\Shop\CartController;
+use App\Http\Controllers\Shop\CheckoutController;
+use App\Http\Controllers\Shop\PaymentController;
+use App\Http\Controllers\Shop\WebhookController;
+use App\Http\Controllers\Admin\OrderController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Auth Routes (Guest only)
+| 1. ADMIN AUTH ROUTES
 |--------------------------------------------------------------------------
+| Harus sebelum route '/' agar /login tidak tertimpa.
 */
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Protected Routes
+| 2. CUSTOMER AUTH ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::prefix('customer')->name('customer.')->group(function () {
+    Route::get('/register',  [CustomerAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [CustomerAuthController::class, 'register'])->name('register.process');
+    Route::get('/login',     [CustomerAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',    [CustomerAuthController::class, 'login'])->name('login.process');
+    Route::post('/logout',   [CustomerAuthController::class, 'logout'])->name('logout');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 3. PUBLIC E-COMMERCE ROUTES (Storefront — tidak perlu login)
+|--------------------------------------------------------------------------
+*/
+Route::name('shop.')->group(function () {
+    Route::get('/',             [ShopController::class, 'index'])->name('home');
+    Route::get('/catalog',      [ShopController::class, 'catalog'])->name('catalog');
+    Route::get('/product/{id}', [ShopController::class, 'show'])->name('product');
+
+    // Sukses checkout — hanya perlu token terenkripsi, tidak perlu login aktif
+    Route::get('/order/success/{token}', [CheckoutController::class, 'success'])->name('order.success');
+    
+    // Invoice PDF & View
+    Route::get('/invoice/{token}', [PaymentController::class, 'invoice'])->name('invoice');
+    Route::get('/invoice/{token}/pdf', [PaymentController::class, 'downloadPdf'])->name('invoice.pdf');
+
+    // Simulate Payment (Demo Only)
+    Route::post('/payment/simulate/{token}', [CheckoutController::class, 'simulatePayment'])->name('order.simulate');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 3b. XENDIT WEBHOOK (Public — tidak perlu login, CSRF dikecualikan)
+|--------------------------------------------------------------------------
+*/
+Route::post('/payment/webhook', [WebhookController::class, 'handle'])->name('payment.webhook');
+
+/*
+|--------------------------------------------------------------------------
+| 3c. COURIER API (Dummy Endpoint — CSRF dikecualikan)
+|--------------------------------------------------------------------------
+*/
+Route::post('/api/courier/delivered/{orderNumber}', [\App\Http\Controllers\Api\CourierController::class, 'delivered'])
+    ->name('api.courier.delivered');
+
+/*
+|--------------------------------------------------------------------------
+| 4. PROTECTED CUSTOMER ROUTES (Wajib login sebagai customer)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('checkCustomer')->name('shop.')->group(function () {
+
+    // Keranjang belanja
+    Route::get('/cart',         [CartController::class, 'index'])->name('cart');
+    Route::post('/cart/add',    [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::delete('/cart',      [CartController::class, 'clear'])->name('cart.clear');
+
+    // Checkout (rate limited: 1x per 30 detik per customer)
+    Route::get('/checkout',  [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+        ->middleware('throttle:checkout')
+        ->name('checkout.store');
+
+    // Portal pelanggan (Riwayat, Lacak & Pengaturan)
+    Route::get('/my-orders', [\App\Http\Controllers\Shop\CustomerOrderController::class, 'index'])->name('orders.index');
+    Route::get('/my-orders/{orderNumber}', [\App\Http\Controllers\Shop\CustomerOrderController::class, 'show'])->name('orders.show');
+    Route::post('/my-orders/review/{orderItem}', [\App\Http\Controllers\Shop\CustomerOrderController::class, 'storeReview'])->name('orders.review');
+    
+    // Pengaturan Akun
+    Route::get('/account/settings', [\App\Http\Controllers\Shop\CustomerSettingsController::class, 'edit'])->name('account.settings');
+    Route::put('/account/settings', [\App\Http\Controllers\Shop\CustomerSettingsController::class, 'update'])->name('account.settings.update');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 5. PROTECTED ADMIN / DASHBOARD ROUTES (Wajib login sebagai staf)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['checkLogin'])->group(function () {
-
-    // Redirect root ke login / dashboard
-    Route::get('/', function () {
-        return redirect()->route('login');
-    });
 
     // ── Dashboard ─────────────────────────────────────────────────────────
     Route::get('/dashboard/admin', [DashboardController::class, 'admin'])
@@ -64,6 +146,16 @@ Route::middleware(['checkLogin'])->group(function () {
         Route::resource('user', UserController::class)->except(['show']);
     });
 
+    // ── Pesanan Online E-commerce (admin only) ────────────────────────────
+    Route::middleware('checkRole:admin')->group(function () {
+        Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders.index');
+        Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
+        Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.update-status');
+        Route::patch('/orders/{id}/approve', [OrderController::class, 'approve'])->name('admin.orders.approve');
+        Route::post('/orders/{id}/handover', [OrderController::class, 'uploadHandover'])->name('admin.orders.handover');
+        Route::post('/orders/{id}/ship', [OrderController::class, 'ship'])->name('admin.orders.ship');
+    });
+
     // ── Barang Masuk (admin & kasir) ──────────────────────────────────────
     Route::middleware('checkRole:admin,kasir')->group(function () {
         Route::resource('barang-masuk', BarangMasukController::class)
@@ -72,19 +164,17 @@ Route::middleware(['checkLogin'])->group(function () {
     });
 
     // ── Barang Keluar ─────────────────────────────────────────────────────
-    // Admin & owner: lihat laporan
     Route::get('/barang-keluar', [BarangKeluarController::class, 'index'])
         ->middleware('checkRole:admin,owner')
         ->name('barang-keluar.index');
 
-    // Kasir: riwayat transaksi + input baru
     Route::middleware('checkRole:kasir')->group(function () {
         Route::get('/transaksi',        [BarangKeluarController::class, 'kasir'])->name('barang-keluar.kasir');
         Route::get('/transaksi/create', [BarangKeluarController::class, 'create'])->name('barang-keluar.create');
         Route::post('/transaksi',       [BarangKeluarController::class, 'store'])->name('barang-keluar.store');
     });
 
-    // ── Laporan & Export (admin, kasir, owner semua bisa) ─────────────────
+    // ── Laporan & Export ──────────────────────────────────────────────────
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/export-keluar', [LaporanController::class, 'exportExcelKeluar'])->name('export-keluar');
         Route::get('/export-masuk',  [LaporanController::class, 'exportExcelMasuk'])->name('export-masuk');

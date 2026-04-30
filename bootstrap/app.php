@@ -12,8 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'checkLogin' => \App\Http\Middleware\CheckLogin::class,
-            'checkRole'  => \App\Http\Middleware\CheckRole::class,
+            'checkLogin'     => \App\Http\Middleware\CheckLogin::class,
+            'checkRole'      => \App\Http\Middleware\CheckRole::class,
+            'checkCustomer'  => \App\Http\Middleware\CheckCustomer::class,
+        ]);
+
+        // Exclude Xendit webhook dari CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'payment/webhook',
+            'api/courier/delivered/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

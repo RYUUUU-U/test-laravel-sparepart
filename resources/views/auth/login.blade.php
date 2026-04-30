@@ -47,9 +47,9 @@
         </form>
 
         <div class="text-center mt-3 border-top pt-3">
-            <small class="text-muted d-block">Akun Demo:</small>
-            <small class="text-primary"><b>admin</b> (Pass: 123)</small> |
-            <small class="text-success"><b>kasir</b> (Pass: 123)</small>
+            <small class="text-muted d-block">Akun Demo (Updated):</small>
+            <small class="text-primary"><b>admin</b> (Pass: password123)</small> |
+            <small class="text-success"><b>kasir</b> (Pass: password123)</small>
         </div>
     </div>
 

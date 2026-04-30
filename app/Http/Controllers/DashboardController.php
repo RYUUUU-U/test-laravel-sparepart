@@ -23,6 +23,7 @@ class DashboardController extends Controller
         $jmlSupplier  = Supplier::count();
         $jmlUser      = User::count();
         $jmlTransaksi = BarangKeluar::whereDate('tanggal_keluar', $today)->count();
+        $jmlPesananOnline = \App\Models\Order::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->count();
 
         // Data grafik terlaris (Top 10)
         $terlaris = DB::table('barang_keluar')
@@ -43,7 +44,7 @@ class DashboardController extends Controller
         $stokMinim = Barang::where('stok', '<=', 5)->get();
 
         return view('dashboard.admin', compact(
-            'jmlBarang', 'jmlSupplier', 'jmlUser', 'jmlTransaksi',
+            'jmlBarang', 'jmlSupplier', 'jmlUser', 'jmlTransaksi', 'jmlPesananOnline',
             'terlaris', 'stokTerbanyak', 'stokMinim'
         ));
     }
@@ -74,6 +75,7 @@ class DashboardController extends Controller
     {
         $jmlBarang    = Barang::count();
         $jmlTransaksi = BarangKeluar::count();
+        $jmlPesananOnline = \App\Models\Order::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->count();
 
         $terlaris = DB::table('barang_keluar')
             ->join('barang', 'barang_keluar.id_barang', '=', 'barang.id_barang')
@@ -83,6 +85,6 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        return view('dashboard.owner', compact('jmlBarang', 'jmlTransaksi', 'terlaris'));
+        return view('dashboard.owner', compact('jmlBarang', 'jmlTransaksi', 'jmlPesananOnline', 'terlaris'));
     }
 }

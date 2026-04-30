@@ -51,6 +51,11 @@
             </li>
             <li class="nav-item"><a class="nav-link" href="{{ route('barang-masuk.index') }}">Barang Masuk</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ route('barang-keluar.index') }}">Barang Keluar</a></li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.orders.index') }}">
+                    <i class="fa-solid fa-cart-shopping me-1"></i>Pesanan Online
+                </a>
+            </li>
         @endif
 
         {{-- Menu Kasir --}}
