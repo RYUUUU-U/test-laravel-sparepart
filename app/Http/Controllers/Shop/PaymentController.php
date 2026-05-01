@@ -56,7 +56,7 @@ class PaymentController extends Controller
             ->where('order_number', $orderNumber)
             ->firstOrFail();
 
-        $pdf = Pdf::loadView('shop.invoice', compact('order'));
+        $pdf = Pdf::loadView('shop.invoice_pdf', compact('order'));
 
         return $pdf->download("Invoice-{$order->order_number}.pdf");
     }

@@ -50,24 +50,7 @@
     $currentIdx = array_search($order->status, $tierKeys);
 @endphp
 
-@if($currentIdx !== false || $order->isPaid())
-<div class="tier-progress">
-    @foreach($tiers as $status => $info)
-        @php
-            $idx = array_search($status, $tierKeys);
-            $class = '';
-            if ($currentIdx !== false) {
-                if ($idx < $currentIdx) $class = 'done';
-                elseif ($idx === $currentIdx) $class = 'current';
-            }
-        @endphp
-        <div class="tier-step {{ $class }}">
-            <i class="fa-solid {{ $info['icon'] }}"></i>
-            {{ $info['label'] }}
-        </div>
-    @endforeach
-</div>
-@endif
+
 
 <div class="row g-4">
     <div class="col-lg-8">
