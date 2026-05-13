@@ -1,58 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Inventory Sparepart E-Commerce
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web e-commerce dan manajemen inventory sparepart berbasis Laravel.
 
-## About Laravel
+## Prasyarat
+- **Laragon** (direkomendasikan) atau XAMPP/MAMP
+- **PHP** >= 8.2
+- **Composer**
+- **Node.js** & **NPM**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Langkah-langkah Instalasi (Khususnya Pengguna Laragon)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. **Copy Project**
+   Pastikan folder project ini (`sparepart-app`) berada di dalam folder `C:\laragon\www\`.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+2. **Buka Terminal Laragon**
+   Buka aplikasi Laragon, lalu klik tombol **Terminal**. Arahkan ke folder project:
+   ```bash
+   cd C:\laragon\www\sparepart-app
+   ```
 
-## Learning Laravel
+3. **Install Dependencies**
+   Jalankan perintah berikut di terminal untuk mengunduh library PHP dan Node.js:
+   ```bash
+   composer install
+   npm install
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+4. **Konfigurasi Environment (.env)**
+   Secara default, Laravel membutuhkan file `.env`. 
+   - Jika belum ada, copy dari `.env.example` dengan perintah: `cp .env.example .env`
+   - Buka file `.env` dan pastikan konfigurasi database sudah sesuai dengan MySQL di Laragon:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=if0_40684561_inventory
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+   > **Penting:** Buat database bernama `if0_40684561_inventory` di HeidiSQL atau phpMyAdmin yang disediakan oleh Laragon sebelum melanjutkan.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+5. **Generate Application Key**
+   ```bash
+   php artisan key:generate
+   ```
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+6. **Migrasi Database & Seeder**
+   Jalankan migrasi untuk membuat tabel-tabel di database Anda:
+   ```bash
+   php artisan migrate
+   ```
+   *(Jalankan `php artisan db:seed` jika sebelumnya ada instruksi untuk mengenerate data dummy atau me-rehash password legacy).*
 
-## Agentic Development
+7. **Kompilasi Aset Frontend (Vite)**
+   Agar tampilan (CSS dan JS) dirender dengan benar, jalankan:
+   ```bash
+   npm run build
+   ```
+   *(Atau gunakan `npm run dev` saat sedang melakukan proses development).*
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+8. **Akses Aplikasi**
+   Karena menggunakan Laragon dengan fitur *Auto Virtual Hosts*, Anda bisa langsung membuka browser dan mengakses:
+   ```text
+   http://sparepart-app.test
+   ```
+   Atau jika menggunakan cara manual:
+   ```bash
+   php artisan serve
+   ```
+   Dan buka `http://localhost:8000`.
 
-```bash
-composer require laravel/boost --dev
+## Catatan Tambahan (Hal yang perlu diperhatikan)
+1. **Xendit Payment Gateway**: Aplikasi ini terintegrasi dengan Xendit. Pastikan variabel `XENDIT_SECRET_KEY` di dalam `.env` sudah terisi dengan Secret Key dari dashboard Xendit (mode *Test/Development*) agar fitur checkout dapat bekerja dengan baik.
+2. **Upload & Gambar**: Jika terdapat fitur upload foto produk/bukti bayar, pastikan untuk menjalankan perintah `php artisan storage:link` di terminal agar folder storage terhubung ke public.
+3. **Konflik Port**: Pastikan Apache/Nginx dan MySQL di Laragon sudah dalam keadaan "Start" (berjalan) dan tidak mengalami bentrok port (seperti port 80 atau 3306) dengan aplikasi lain (misal: Skype atau XAMPP yang masih aktif).
 
-php artisan boost:install
-```
+## Menghubungkan ke Ngrok (Untuk Testing Pembayaran/Xendit)
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Karena menggunakan Xendit (Payment Gateway), Xendit butuh mengirimkan *Callback/Webhook* jika ada pembayaran berhasil. Agar Xendit bisa mendeteksi project yang ada di komputer lokal Anda, Anda butuh menggunakan **Ngrok**.
 
-## Contributing
+**Apakah Laragon harus selalu menyala?**
+**YA**. Minimal **MySQL** di Laragon harus selalu berjalan.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+**Opsi 1: Menggunakan `php artisan serve` (Paling Mudah)**
+1. Pastikan **MySQL** di Laragon menyala.
+2. Buka terminal Laragon, ketik: `php artisan serve` (aplikasi akan berjalan di port `8000`).
+3. Buka tab terminal baru (atau Command Prompt biasa), ketik perintah ngrok:
+   ```bash
+   ngrok http 8000
+   ```
 
-## Code of Conduct
+**Opsi 2: Menggunakan Virtual Host Laragon (port 80)**
+1. Pastikan **Apache/Nginx** dan **MySQL** di Laragon menyala.
+2. Di terminal baru, jalankan ngrok dengan menambahkan `host-header` sesuai nama virtual host Anda:
+   ```bash
+   ngrok http 80 --host-header=sparepart-app.test
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Setelah menjalankan Ngrok, copy URL *Forwarding* yang diberikan Ngrok (contoh: `https://abcd-123.ngrok-free.app`), lalu daftarkan URL tersebut ke Dashboard Xendit Anda di bagian Webhook, atau sesuaikan konfigurasi `.env` Anda jika diperlukan.

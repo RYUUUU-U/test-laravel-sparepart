@@ -35,10 +35,15 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                       placeholder="Masukan password" required>
+                <div class="input-group">
+                    <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror"
+                           placeholder="Masukan password" required>
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                        <i class="fa-solid fa-eye" id="toggleIcon"></i>
+                    </button>
+                </div>
                 @error('password')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>
             <button type="submit" class="btn btn-primary w-100">
@@ -54,4 +59,14 @@
     </div>
 
 </body>
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function (e) {
+        const password = document.getElementById('password');
+        const icon = document.getElementById('toggleIcon');
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+    });
+</script>
 </html>

@@ -26,8 +26,9 @@
     .form-control:focus { border-color:#E63946; box-shadow:0 0 0 3px rgba(230,57,70,.1); }
     .form-label { font-weight:600; font-size:.88rem; color:#374151; }
     .input-icon-wrap { position:relative; }
-    .input-icon-wrap i { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:#9ca3af; }
+    .input-icon-wrap > i:first-child { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:#9ca3af; }
     .input-icon-wrap .form-control { padding-left:2.6rem; }
+    .toggle-password { position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:#9ca3af; cursor:pointer; }
     .btn-auth {
         background: linear-gradient(135deg,#E63946,#c1121f);
         border:none; color:#fff; border-radius:12px;
@@ -86,7 +87,8 @@
                             <i class="fa-solid fa-lock"></i>
                             <input type="password" name="password" id="password"
                                    class="form-control @error('password') is-invalid @enderror"
-                                   placeholder="••••••••">
+                                   placeholder="••••••••" style="padding-right: 2.5rem;">
+                            <i class="fa-solid fa-eye toggle-password" id="togglePasswordIcon"></i>
                         </div>
                         @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
@@ -115,3 +117,21 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('togglePasswordIcon');
+        const passInput = document.getElementById('password');
+        
+        if(toggleBtn && passInput) {
+            toggleBtn.addEventListener('click', function() {
+                const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+    });
+</script>
+@endpush

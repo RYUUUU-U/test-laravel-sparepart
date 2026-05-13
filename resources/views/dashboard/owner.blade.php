@@ -40,6 +40,29 @@
         </div>
     </div>
 </div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header font-weight-bold">Laporan Keuangan (6 Bulan Terakhir)</div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="chartKeuangan"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header font-weight-bold">Laporan Penjualan (6 Bulan Terakhir)</div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="chartPenjualan"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -51,6 +74,56 @@
             datasets: [{ label: 'Jumlah Terjual', data: @json($terlaris->pluck('total')), backgroundColor: '#FF4500' }]
         },
         options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    new Chart(document.getElementById('chartKeuangan').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: @json($labelBulan),
+            datasets: [{ 
+                label: 'Pendapatan (Rp)', 
+                data: @json($dataKeuangan), 
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + value.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('chartPenjualan').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: @json($labelBulan),
+            datasets: [{ 
+                label: 'Barang Terjual (Item)', 
+                data: @json($dataPenjualan), 
+                backgroundColor: '#007bff'
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
     });
 </script>
 @endpush
